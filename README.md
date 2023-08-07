@@ -1,4 +1,4 @@
-# Encrypted Local Text - Secure Diary App
+# Encrypted Local Text
 
 # Description:
 Encrypted Local Text is a secure diary app built with Python and Tkinter that provides a private and safe space to jot down your thoughts, ideas, and notes. With its robust encryption features, your entries are stored locally on your computer, and only you can access them with the encryption password you choose.
