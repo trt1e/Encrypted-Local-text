@@ -76,6 +76,16 @@ class DiaryApp:
         self.save_button.pack(side=tk.RIGHT, padx=5, pady=5)
         self.save_button.config(state=tk.DISABLED)
 
+        undo_button = tk.Button(
+            button_frame, text="Undo", command=self.undo, bg=BUTTON_COLOR, fg=TEXT_COLOR
+        )
+        undo_button.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        redo_button = tk.Button(
+            button_frame, text="Redo", command=self.redo, bg=BUTTON_COLOR, fg=TEXT_COLOR
+        )
+        redo_button.pack(side=tk.RIGHT, padx=5, pady=5)
+
     def setup_project_list(self):
         project_frame = tk.Frame(self.root, bg=BG_COLOR)
         project_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -120,6 +130,10 @@ class DiaryApp:
             selectbackground=BUTTON_COLOR, selectforeground=TEXT_COLOR
         )
         self.text_widget.pack(fill=tk.BOTH, expand=True)
+
+        self.undo_stack = []
+        self.redo_stack = []
+        self.text_widget.bind("<KeyRelease>", self.on_key_release)
 
         self.disable_writing_space()
 
@@ -229,7 +243,34 @@ class DiaryApp:
             encrypted_content = cipher_suite.encrypt(new_content)
             with open(project_file, "wb") as encrypted_file:
                 encrypted_file.write(salt + encrypted_content)
+            
+            # Reset edit_modified state and clear undo and redo stacks
+            self.text_widget.edit_modified(False)
+            self.undo_stack.clear()
+            self.redo_stack.clear()
+
             messagebox.showinfo("Success", "Project saved successfully.")
+
+    def on_key_release(self, event):
+        current_state = self.text_widget.edit_modified()
+        if current_state:
+            self.undo_stack.append(self.text_widget.get("1.0", tk.END))
+            self.text_widget.edit_modified(False)
+            self.redo_stack.clear()
+
+    def undo(self):
+        if self.undo_stack:
+            current_content = self.undo_stack.pop()
+            self.redo_stack.append(self.text_widget.get("1.0", tk.END))
+            self.text_widget.delete("1.0", tk.END)
+            self.text_widget.insert("1.0", current_content)
+
+    def redo(self):
+        if self.redo_stack:
+            current_content = self.redo_stack.pop()
+            self.undo_stack.append(self.text_widget.get("1.0", tk.END))
+            self.text_widget.delete("1.0", tk.END)
+            self.text_widget.insert("1.0", current_content)
 
 def main():
     root = tk.Tk()
